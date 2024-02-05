@@ -1,0 +1,106 @@
+---
+title: "COVID-19_project"
+author: "Haobo Chen"
+output: html_document
+date: "2024-02-04"
+---
+
+Academic Honesty
+Name(s) of all authors: Haobo Chen
+Assignment name: Individual Project
+Assignment due date: TBD
+Written/online sources used: None
+Help obtained (Acknowledgments): None
+Add the statement: We confirm that the above list of sources is complete AND that we have not talked to anyone else about the solution to this problem.
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(readr)
+library(dplyr)
+library(tidyr)
+library(magrittr)
+library(ggplot2)
+library(qrcode)
+library(lattice)
+library(wordcloud2)
+library(shiny)
+library(leaflet)
+library(maps)
+library(sf)
+library(shinydashboard)
+library(lubridate)
+```
+
+## Map data
+```{r}
+# Install usmap if you haven't already
+if(!requireNamespace("usmap", quietly = TRUE)) install.packages("usmap")
+
+library(usmap)
+
+# Get state centroids
+state_centroids <- usmap::usmap_cities() %>%
+  dplyr::filter(capital == 2) %>%
+  dplyr::select(state = full, lat, long)
+
+# View the first few rows of the data frame
+head(state_centroids)
+
+
+```
+
+## Building an R Shiny app
+
+```{r}
+ui <- fluidPage(
+  titlePanel("COVID-19 in the U.S."),
+  sidebarLayout(
+    sidebarPanel(
+      # Date range input for selecting the date
+      dateInput("dateInput", "Choose a date:", value = Sys.Date(), min = "2020-01-01", max = Sys.Date())
+    ),
+    mainPanel(
+      leafletOutput("covidMap")
+    )
+  )
+)
+
+
+```
+
+## Server function
+```{r}
+server <- function(input, output) {
+  # Load COVID-19 data
+  covid_data <- readr::read_csv("datebase/us-states.csv")
+  
+  output$covidMap <- renderLeaflet({
+    # Filter data based on selected date
+    selected_data <- covid_data %>%
+      dplyr::filter(date == input$dateInput) %>%
+      dplyr::group_by(state) %>%
+      dplyr::summarise(cases = sum(cases), deaths = sum(deaths)) %>%
+      dplyr::ungroup()
+    
+    # Assuming `state_lat_long` is a data frame with state names, and their corresponding latitudes and longitudes
+    map_data <- merge(selected_data, state_lat_long, by = "state")
+    
+    leaflet(data = map_data) %>%
+      addTiles() %>%
+      addCircleMarkers(
+        lng = ~long, lat = ~lat,
+        weight = 1, radius = ~sqrt(cases) / 100,
+        color = '#ff0000', fillColor = '#ff0000',
+        fillOpacity = 0.5,
+        popup = ~paste(state, "<br>", "Cases: ", cases, "<br>", "Deaths: ", deaths)
+      )
+  })
+}
+
+
+```
+
+## Run app
+```{r}
+shinyApp(ui = ui, server = server)
+```
