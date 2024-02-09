@@ -31,73 +31,171 @@ library(shinydashboard)
 library(lubridate)
 ```
 
-## Map data
-```{r}
-# Install usmap if you haven't already
-if(!requireNamespace("usmap", quietly = TRUE)) install.packages("usmap")
-
-library(usmap)
-
-# Get state centroids
-state_centroids <- usmap::usmap_cities() %>%
-  dplyr::filter(capital == 2) %>%
-  dplyr::select(state = full, lat, long)
-
-# View the first few rows of the data frame
-head(state_centroids)
-
-
-```
 
 ## Building an R Shiny app
 
 ```{r}
-ui <- fluidPage(
-  titlePanel("COVID-19 in the U.S."),
-  sidebarLayout(
-    sidebarPanel(
-      # Date range input for selecting the date
-      dateInput("dateInput", "Choose a date:", value = Sys.Date(), min = "2020-01-01", max = Sys.Date())
-    ),
-    mainPanel(
-      leafletOutput("covidMap")
+# Load and prepare the US states geographical data
+us_states <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp")
+us_states <- st_transform(us_states, 4326)
+
+# Load the education data
+education_data <- read_csv("database/Education.csv")
+
+# Aggregate the education data to state level
+# Assuming 'State' is the state name or code that matches the shapefile
+# and you're interested in "Percent of adults with less than a high school diploma"
+education_state_level <- education_data %>%
+  group_by(State) %>%
+   summarise(
+        Education_Less_HS = mean(`Percent of adults with less than a high school diploma`, na.rm = TRUE),
+        High_School_Diploma_Only = mean(`Percent of adults with a high school diploma only`, na.rm = TRUE),
+        Some_College = mean(`Percent of adults completing some college or associate's degree`, na.rm = TRUE),
+        Bachelors_Or_Higher = mean(`Percent of adults with a bachelor's degree or higher`, na.rm = TRUE)
+      )
+
+# Match state abbreviations in shapefile with those in education data
+merged_data <- us_states %>%
+  left_join(education_state_level, by = c("STUSPS" = "State"))
+
+
+
+# Create a Shiny app object
+ui <- dashboardPage(
+  dashboardHeader(title = "COVID and Education Level Analysis"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Map", tabName = "map", icon = icon("globe")),
+      menuItem("Line Graph", tabName = "line_graph", icon = icon("line-chart"))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(tabName = "map",
+              fluidRow(
+                column(width = 3,
+                      # Add a menu input for the user to select the education level
+                      selectInput("educationAttribute", "Choose Education Level:",
+                                  choices = c("Percent of adults with less than a high school diploma" = "Percent of adults with less than a high school diploma",
+                                              "Percent of adults with a high school diploma only" = "High school diploma only",
+                                              "Percent of adults with some college or associate's degree" = "Some college or associate's degree",
+                                              "Percent of adults with a bachelor's degree or higher" = "Bachelor's degree or higher")),
+                ),
+                column(width = 9,
+                       leafletOutput("mapOutput"), # Changed 'map' to 'mapOutput' to avoid potential conflicts
+                       textOutput("text"),
+                       tableOutput("description")
+                ),
+              tableOutput("table")
+      )
     )
   )
 )
-
+)
 
 ```
 
 ## Server function
 ```{r}
-server <- function(input, output) {
-  # Load COVID-19 data
-  covid_data <- readr::read_csv("datebase/us-states.csv")
-  
-  output$covidMap <- renderLeaflet({
-    # Filter data based on selected date
-    selected_data <- covid_data %>%
-      dplyr::filter(date == input$dateInput) %>%
-      dplyr::group_by(state) %>%
-      dplyr::summarise(cases = sum(cases), deaths = sum(deaths)) %>%
-      dplyr::ungroup()
-    
-    # Assuming `state_lat_long` is a data frame with state names, and their corresponding latitudes and longitudes
-    map_data <- merge(selected_data, state_lat_long, by = "state")
-    
-    leaflet(data = map_data) %>%
-      addTiles() %>%
-      addCircleMarkers(
-        lng = ~long, lat = ~lat,
-        weight = 1, radius = ~sqrt(cases) / 100,
-        color = '#ff0000', fillColor = '#ff0000',
-        fillOpacity = 0.5,
-        popup = ~paste(state, "<br>", "Cases: ", cases, "<br>", "Deaths: ", deaths)
+library(shiny)
+library(shinydashboard)
+library(leaflet)
+library(sf)
+library(dplyr)
+library(readr) # For read_csv
+
+# Assuming us_states is preloaded and transformed outside the server function for simplicity in this example
+# us_states <- st_read("path_to_shapefile.shp")
+# us_states <- st_transform(us_states, 4326)
+
+server <- function(input, output, session) {
+  # Reactive expression for loading and preparing education data
+  educationData <- reactive({
+    education_data <- read_csv("database/Education.csv") %>%
+      group_by(State) %>%
+      summarise(Education_Level = mean(get(input$educationAttribute), na.rm = TRUE),
+      Education_Less_HS = mean(`Percent of adults with less than a high school diploma`, na.rm = TRUE),
+        High_School_Diploma_Only = mean(`Percent of adults with a high school diploma only`, na.rm = TRUE),
+        Some_College = mean(`Percent of adults completing some college or associate's degree`, na.rm = TRUE),
+        Bachelors_Or_Higher = mean(`Percent of adults with a bachelor's degree or higher`, na.rm = TRUE)
       )
+    
+    merged_data <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp") %>%
+      st_transform(., 4326) %>%
+      left_join(education_data, by = c("STUSPS" = "State"))
+    
+    return(merged_data)
   })
+
+  covidVaccinationData <- reactive({
+    covid_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv") %>%
+      group_by(State) %>%
+      summarise(Doses_Distributed = sum(doses_distributed, na.rm = TRUE),
+                Doses_Administered = sum(doses_administered, na.rm = TRUE))
+    merged_covid_data <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp") %>%
+      st_transform(., 4326) %>%
+      left_join(covid_data, by = c("STUSPS" = "State"))
+    
+    return(merged_covid_data)
+  })
+  
+  # Output for the map, which depends on the reactive education data
+  output$mapOutput <- renderLeaflet({
+    # Call the reactive expression and store its result
+    data <- educationData() # Correctly calling the reactive expression
+    
+    leaflet(data = data) %>%
+    fitBounds(-125, 24.396308, -66.934570, 49.384358) %>% # Fit the map to the US bounds
+      addProviderTiles(providers$CartoDB.Positron) %>%
+      addPolygons(fillColor = ~colorQuantile("YlOrRd", Education_Level)(Education_Level),
+                  fillOpacity = 0.7,
+                  weight = 1,
+                  color = "white",
+                  dashArray = "3",
+                  highlightOptions = highlightOptions(weight = 3,
+                                                       color = "#666",
+                                                       dashArray = "",
+                                                       fillOpacity = 0.7,
+                                                       bringToFront = TRUE),
+                  popup = ~paste(NAME, "<br>",
+                       "Less than HS Diploma: ", round(Education_Less_HS, 2), "%<br>",
+                       "High School Diploma Only: ", round(High_School_Diploma_Only, 2), "%<br>",
+                       "Some College: ", round(Some_College, 2), "%<br>",
+                       "Bachelor's or Higher: ", round(Bachelors_Or_Higher, 2), "%")
+      ) %>%
+      addLegend("bottomright", pal = colorQuantile("YlOrRd", data$Education_Level), values = ~Education_Level,
+                title = input$educationAttribute,
+                opacity = 0.7)
+  })
+  output$covidMapOutput <- renderLeaflet({
+    data <- covidVaccinationData() # Use the reactive expression for COVID data
+    
+    leaflet(data = data) %>%
+      fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
+      addProviderTiles(providers$CartoDB.Positron) %>%
+      addPolygons(fillColor = ~colorQuantile("YlGnBu", Doses_Administered / Doses_Distributed)(Doses_Administered / Doses_Distributed),
+                  fillOpacity = 0.7,
+                  weight = 1,
+                  color = "white",
+                  dashArray = "3",
+                  highlightOptions = highlightOptions(weight = 3,
+                                                       color = "#666",
+                                                       dashArray = "",
+                                                       fillOpacity = 0.7,
+                                                       bringToFront = TRUE),
+                   popup = ~paste(NAME, "<br>",
+                                 "Doses Distributed: ", Doses_Distributed, "<br>",
+                                 "Doses Administered: ", Doses_Administered)
+                  ) %>%
+      addLegend("bottomright", pal = colorQuantile("YlGnBu", data$Doses_Administered / data$Doses_Distributed), values = ~Doses_Administered / Doses_Distributed,
+                title = "Vaccination Rate",
+                opacity = 0.7)
+  })
+
 }
 
-
+# Run the app
+shinyApp(ui, server)
 ```
 
 ## Run app
