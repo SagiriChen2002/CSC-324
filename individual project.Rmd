@@ -3,15 +3,16 @@ title: "COVID-19_project"
 author: "Haobo Chen"
 output: html_document
 date: "2024-02-04"
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
-Academic Honesty
-Name(s) of all authors: Haobo Chen
-Assignment name: Individual Project
-Assignment due date: TBD
-Written/online sources used: None
-Help obtained (Acknowledgments): None
-Add the statement: We confirm that the above list of sources is complete AND that we have not talked to anyone else about the solution to this problem.
+Academic Honesty Name(s) of all authors: Haobo Chen Assignment name:
+Individual Project Assignment due date: TBD Written/online sources used:
+None Help obtained (Acknowledgments): None Add the statement: We confirm
+that the above list of sources is complete AND that we have not talked
+to anyone else about the solution to this problem.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -31,7 +32,6 @@ library(shinydashboard)
 library(lubridate)
 ```
 
-
 ## Building an R Shiny app
 
 ```{r}
@@ -41,6 +41,7 @@ us_states <- st_transform(us_states, 4326)
 
 # Load the education data
 education_data <- read_csv("database/Education.csv")
+covid_data <- read_csv("database/us-states.csv")
 
 # Aggregate the education data to state level
 # Assuming 'State' is the state name or code that matches the shapefile
@@ -54,9 +55,18 @@ education_state_level <- education_data %>%
         Bachelors_Or_Higher = mean(`Percent of adults with a bachelor's degree or higher`, na.rm = TRUE)
       )
 
+# Aggregate the COVID data to state level
+# Assuming 'state' is the state name or code that matches the shapefile
+covid_state_level <- covid_data %>%
+  group_by(state) %>%
+  summarise(Cases = sum(cases), Deaths = sum(deaths))
+
 # Match state abbreviations in shapefile with those in education data
 merged_data <- us_states %>%
   left_join(education_state_level, by = c("STUSPS" = "State"))
+
+merged_data <- us_states %>%
+  left_join(covid_state_level, by = c("STUSPS" = "state"))
 
 
 
@@ -80,13 +90,17 @@ ui <- dashboardPage(
                                               "Percent of adults with a high school diploma only" = "High school diploma only",
                                               "Percent of adults with some college or associate's degree" = "Some college or associate's degree",
                                               "Percent of adults with a bachelor's degree or higher" = "Bachelor's degree or higher")),
+                      selectInput("covidAttribute", "Choose COVID-19 Attribute:",
+                                  choices = c("Cases" = "Cases",
+                                                 "Deaths" = "Deaths"))
                 ),
                 column(width = 9,
                        leafletOutput("mapOutput"), # Changed 'map' to 'mapOutput' to avoid potential conflicts
-                       textOutput("text"),
-                       tableOutput("description")
+                       br(), # Adds a line break between maps
+                       leafletOutput("covidMapOutput")
+                       
                 ),
-              tableOutput("table")
+              
       )
     )
   )
@@ -96,6 +110,7 @@ ui <- dashboardPage(
 ```
 
 ## Server function
+
 ```{r}
 library(shiny)
 library(shinydashboard)
@@ -103,6 +118,9 @@ library(leaflet)
 library(sf)
 library(dplyr)
 library(readr) # For read_csv
+
+
+# Step 1: Create a state name to abbreviation mapping
 
 # Assuming us_states is preloaded and transformed outside the server function for simplicity in this example
 # us_states <- st_read("path_to_shapefile.shp")
@@ -127,17 +145,22 @@ server <- function(input, output, session) {
     return(merged_data)
   })
 
-  covidVaccinationData <- reactive({
-    covid_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv") %>%
-      group_by(State) %>%
-      summarise(Doses_Distributed = sum(doses_distributed, na.rm = TRUE),
-                Doses_Administered = sum(doses_administered, na.rm = TRUE))
-    merged_covid_data <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp") %>%
-      st_transform(., 4326) %>%
-      left_join(covid_data, by = c("STUSPS" = "State"))
-    
-    return(merged_covid_data)
-  })
+  # Reactive expression for loading and preparing COVID data for 2023-03-23
+covidData <- reactive({
+  covid_data <- read_csv("database/us-states-output.csv") %>%
+    mutate(Date = as.Date(date, format = "%Y-%m-%d")) %>%
+    filter(Date == as.Date("2023-03-23")) %>%
+      group_by(state) %>%
+      summarise(COVID_Level = sum(get(input$covidAttribute)), Cases = sum(Cases), Deaths = sum(Deaths))
+
+  merged_covid_data <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp") %>%
+    st_transform(., 4326) %>%
+    left_join(covid_data, by = c("STUSPS" = "state"))
+  
+  return(merged_covid_data)
+})
+
+
   
   # Output for the map, which depends on the reactive education data
   output$mapOutput <- renderLeaflet({
@@ -167,38 +190,41 @@ server <- function(input, output, session) {
                 title = input$educationAttribute,
                 opacity = 0.7)
   })
-  output$covidMapOutput <- renderLeaflet({
-    data <- covidVaccinationData() # Use the reactive expression for COVID data
-    
-    leaflet(data = data) %>%
-      fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
-      addProviderTiles(providers$CartoDB.Positron) %>%
-      addPolygons(fillColor = ~colorQuantile("YlGnBu", Doses_Administered / Doses_Distributed)(Doses_Administered / Doses_Distributed),
-                  fillOpacity = 0.7,
-                  weight = 1,
-                  color = "white",
-                  dashArray = "3",
-                  highlightOptions = highlightOptions(weight = 3,
-                                                       color = "#666",
-                                                       dashArray = "",
-                                                       fillOpacity = 0.7,
-                                                       bringToFront = TRUE),
-                   popup = ~paste(NAME, "<br>",
-                                 "Doses Distributed: ", Doses_Distributed, "<br>",
-                                 "Doses Administered: ", Doses_Administered)
-                  ) %>%
-      addLegend("bottomright", pal = colorQuantile("YlGnBu", data$Doses_Administered / data$Doses_Distributed), values = ~Doses_Administered / Doses_Distributed,
-                title = "Vaccination Rate",
-                opacity = 0.7)
-  })
 
+
+
+output$covidMapOutput <- renderLeaflet({
+  data <- covidData() # Use the reactive COVID data
+ # Generate popup content dynamically based on selected attribute
+  
+  
+  leaflet(data = data) %>%
+    fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
+    addProviderTiles(providers$CartoDB.Positron) %>%
+    addPolygons(fillColor = ~colorQuantile("YlOrRd", COVID_Level)(COVID_Level),
+                fillOpacity = 0.7,
+                weight = 1,
+                color = "white",
+                dashArray = "3",
+                highlightOptions = highlightOptions(weight = 3,
+                                                     color = "#666",
+                                                     dashArray = "",
+                                                     fillOpacity = 0.7,
+                                                     bringToFront = TRUE),
+                 popup = ~paste(NAME, "<br>",
+                            "Cases" = formatC(as.integer(Cases), big.mark=","),
+                            "Deaths" = formatC(as.integer(Deaths), big.mark=","))
+                ) %>%
+    addLegend("bottomright",  pal = colorQuantile("YlOrRd", data$COVID_Level), values = ~COVID_Level,
+              title = input$covidAttribute,
+              opacity = 0.7)
+})
+#addLegend("bottomright", pal = colorQuantile("YlOrRd", data$Education_Level), values = ~Education_Level,
+                #title = input$educationAttribute,
+                #opacity = 0.7)
+  # No need for observeEvent if the map automatically updates with input$apply due to reactive dependencies
 }
 
 # Run the app
 shinyApp(ui, server)
-```
-
-## Run app
-```{r}
-shinyApp(ui = ui, server = server)
 ```
