@@ -30,6 +30,8 @@ library(maps)
 library(sf)
 library(shinydashboard)
 library(lubridate)
+library(viridis) # For color palettes
+library(RColorBrewer)
 ```
 
 ## Building an R Shiny app
@@ -113,6 +115,32 @@ ui <- dashboardPage(
             leafletOutput("covidMapOutput") # Display the COVID map
           )
         )
+      ),
+      tabItem(
+        tabName = "line_graph",
+        fluidRow(
+          column(
+            width = 3,
+            # Select the two attributes for the line graph
+            selectInput("educationAttribute", "Choose Education Level:", choices = c(
+              "Percent of adults with less than a high school diploma" = "Percent of adults with less than a high school diploma",
+              "Percent of adults with a high school diploma only" = "High school diploma only",
+              "Percent of adults with some college or associate's degree" = "Some college or associate's degree",
+              "Percent of adults with a bachelor's degree or higher" = "Bachelor's degree or higher"
+            )),
+            selectInput("covidAttribute", "Choose COVID-19 Attribute:", choices = c(
+              "Cases" = "Cases",
+              "Deaths" = "Deaths",
+              "Vaccine Distributed" = "doses_distributed",
+              "Vaccine Administered" = "doses_administered"
+            )),
+            actionButton("plotGraph", "Plot Graph")
+          ),
+          column(
+            width = 9,
+            plotOutput("linePlot")
+          )
+        )
       )
     )
   )
@@ -122,21 +150,7 @@ ui <- dashboardPage(
 ## Server function
 
 ```{r}
-library(shiny)
-library(shinydashboard)
-library(leaflet)
-library(sf)
-library(dplyr)
-library(readr) # For read_csv
-library(viridis) # For color palettes
-library(RColorBrewer)
-
-
 # Step 1: Create a state name to abbreviation mapping
-
-# Assuming us_states is preloaded and transformed outside the server function for simplicity in this example
-# us_states <- st_read("path_to_shapefile.shp")
-# us_states <- st_transform(us_states, 4326)
 
 server <- function(input, output, session) {
   # Reactive expression for loading and preparing education data
@@ -264,10 +278,28 @@ server <- function(input, output, session) {
           "Doses Administered: ", formatC(as.integer(Doses_Administered), big.mark = ",")
         )
       )
-    # ) %>%
-    # addLegend("bottomright",  pal = colorQuantile("YlOrRd", data$COVID_Level), values = ~COVID_Level,
-    #           title = input$covidAttribute,
-    #           opacity = 0.7)
+  })
+
+  observeEvent(input$plotGraph, {
+    # Fetch and prepare the data based on user selections
+    edu_data <- educationData()
+    covid_data <- covidData()
+
+    # Assuming the state identifiers match between edu_data and covid_data
+    # Extract the relevant columns based on user input for plotting
+    plot_data <- edu_data %>%
+      select(STUSPS, Education_Level = all_of(input$educationAttribute)) %>%
+      left_join(covid_data %>% select(STUSPS, COVID_Attribute = all_of(input$covidAttribute)), by = "STUSPS")
+    
+
+    # Generate the plot
+    output$linePlot <- renderPlot({
+      ggplot(plot_data, aes(x = education_level, y = covid_attribute_value)) +
+        geom_line() + # Use geom_point() for scatter plot, geom_bar() for bar plot, etc., depending on your data
+        labs(x = input$educationAttributeGraph, y = input$covidAttributeGraph) +
+        theme_minimal() +
+        ggtitle("Education Level vs. COVID-19 Attribute")
+    })
   })
 
   # No need for observeEvent if the map automatically updates with input$apply due to reactive dependencies
