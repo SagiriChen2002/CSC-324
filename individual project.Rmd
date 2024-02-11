@@ -48,12 +48,12 @@ covid_data <- read_csv("database/us-states.csv")
 # and you're interested in "Percent of adults with less than a high school diploma"
 education_state_level <- education_data %>%
   group_by(State) %>%
-   summarise(
-        Education_Less_HS = mean(`Percent of adults with less than a high school diploma`, na.rm = TRUE),
-        High_School_Diploma_Only = mean(`Percent of adults with a high school diploma only`, na.rm = TRUE),
-        Some_College = mean(`Percent of adults completing some college or associate's degree`, na.rm = TRUE),
-        Bachelors_Or_Higher = mean(`Percent of adults with a bachelor's degree or higher`, na.rm = TRUE)
-      )
+  summarise(
+    Education_Less_HS = mean(`Percent of adults with less than a high school diploma`, na.rm = TRUE),
+    High_School_Diploma_Only = mean(`Percent of adults with a high school diploma only`, na.rm = TRUE),
+    Some_College = mean(`Percent of adults completing some college or associate's degree`, na.rm = TRUE),
+    Bachelors_Or_Higher = mean(`Percent of adults with a bachelor's degree or higher`, na.rm = TRUE)
+  )
 
 # Aggregate the COVID data to state level
 # Assuming 'state' is the state name or code that matches the shapefile
@@ -81,32 +81,42 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     tabItems(
-      tabItem(tabName = "map",
-              fluidRow(
-                column(width = 3,
-                      # Add a menu input for the user to select the education level
-                      selectInput("educationAttribute", "Choose Education Level:",
-                                  choices = c("Percent of adults with less than a high school diploma" = "Percent of adults with less than a high school diploma",
-                                              "Percent of adults with a high school diploma only" = "High school diploma only",
-                                              "Percent of adults with some college or associate's degree" = "Some college or associate's degree",
-                                              "Percent of adults with a bachelor's degree or higher" = "Bachelor's degree or higher")),
-                      selectInput("covidAttribute", "Choose COVID-19 Attribute:",
-                                  choices = c("Cases" = "Cases",
-                                                 "Deaths" = "Deaths"))
-                ),
-                column(width = 9,
-                       leafletOutput("mapOutput"), # Changed 'map' to 'mapOutput' to avoid potential conflicts
-                       br(), # Adds a line break between maps
-                       leafletOutput("covidMapOutput")
-                       
-                ),
-              
+      tabItem(
+        tabName = "map",
+        fluidRow(
+          column(
+            width = 3,
+            # Add a menu input for the user to select the education level
+            selectInput("educationAttribute", "Choose Education Level:",
+              choices = c(
+                "Percent of adults with less than a high school diploma" = "Percent of adults with less than a high school diploma",
+                "Percent of adults with a high school diploma only" = "High school diploma only",
+                "Percent of adults with some college or associate's degree" = "Some college or associate's degree",
+                "Percent of adults with a bachelor's degree or higher" = "Bachelor's degree or higher"
+              )
+            ),
+            tags$div(style = "margin-bottom: 400px;"), # Adds 20px of space below the first input.
+            selectInput("covidAttribute", "Choose COVID-19 Attribute:",
+              choices = c(
+                "Cases" = "Cases",
+                "Deaths" = "Deaths",
+                "Vaccine Distributed" = "doses_distributed",
+                "Vaccine Administered" = "doses_administered"
+              )
+            )
+          ),
+          column(
+            width = 9,
+            tags$h3("Education Map"), # Adds the title above the first map
+            leafletOutput("mapOutput"), # Display the education map
+            tags$h3("COVID-19 Map"), # Optional: similarly, you might want to add a title for the COVID map for consistency
+            leafletOutput("covidMapOutput") # Display the COVID map
+          )
+        )
       )
     )
   )
 )
-)
-
 ```
 
 ## Server function
@@ -118,6 +128,8 @@ library(leaflet)
 library(sf)
 library(dplyr)
 library(readr) # For read_csv
+library(viridis) # For color palettes
+library(RColorBrewer)
 
 
 # Step 1: Create a state name to abbreviation mapping
@@ -131,97 +143,133 @@ server <- function(input, output, session) {
   educationData <- reactive({
     education_data <- read_csv("database/Education.csv") %>%
       group_by(State) %>%
-      summarise(Education_Level = mean(get(input$educationAttribute), na.rm = TRUE),
-      Education_Less_HS = mean(`Percent of adults with less than a high school diploma`, na.rm = TRUE),
+      summarise(
+        Education_Level = mean(get(input$educationAttribute), na.rm = TRUE),
+        Education_Less_HS = mean(`Percent of adults with less than a high school diploma`, na.rm = TRUE),
         High_School_Diploma_Only = mean(`Percent of adults with a high school diploma only`, na.rm = TRUE),
         Some_College = mean(`Percent of adults completing some college or associate's degree`, na.rm = TRUE),
         Bachelors_Or_Higher = mean(`Percent of adults with a bachelor's degree or higher`, na.rm = TRUE)
       )
-    
+
     merged_data <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp") %>%
       st_transform(., 4326) %>%
       left_join(education_data, by = c("STUSPS" = "State"))
-    
+
     return(merged_data)
   })
 
   # Reactive expression for loading and preparing COVID data for 2023-03-23
-covidData <- reactive({
-  covid_data <- read_csv("database/us-states-output.csv") %>%
-    mutate(Date = as.Date(date, format = "%Y-%m-%d")) %>%
-    filter(Date == as.Date("2023-03-23")) %>%
+  covidData <- reactive({
+    # Load COVID data
+    covid_data <- read_csv("database/us-states-output.csv") %>%
+      mutate(Date = as.Date(date, format = "%m/%d/%y")) %>%
+      filter(Date == as.Date("2023-03-23", format = "%Y-%m-%d"))
+
+    # Load and prepare vaccine data (assuming this step is correct)
+    vaccine_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv") %>%
+      # Ensure this select statement matches your data structure
+      select(state, doses_distributed, doses_administered)
+
+    # Merge COVID data with vaccine data on state
+    covid_data <- left_join(covid_data, vaccine_data, by = "state")
+
+    # Summarise data after ensuring all necessary columns are present
+    summarised_data <- covid_data %>%
       group_by(state) %>%
-      summarise(COVID_Level = sum(get(input$covidAttribute)), Cases = sum(Cases), Deaths = sum(Deaths))
+      summarise(
+        COVID_Level = sum(.data[[input$covidAttribute]], na.rm = TRUE),
+        Cases = sum(Cases, na.rm = TRUE),
+        Deaths = sum(Deaths, na.rm = TRUE),
+        Doses_Distributed = sum(doses_distributed, na.rm = TRUE),
+        Doses_Administered = sum(doses_administered, na.rm = TRUE)
+      )
 
-  merged_covid_data <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp") %>%
-    st_transform(., 4326) %>%
-    left_join(covid_data, by = c("STUSPS" = "state"))
-  
-  return(merged_covid_data)
-})
+    # Merge summarised data with geographic data
+    merged_covid_data <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp") %>%
+      st_transform(., 4326) %>%
+      left_join(summarised_data, by = c("STUSPS" = "state"))
 
-
-  
-  # Output for the map, which depends on the reactive education data
-  output$mapOutput <- renderLeaflet({
-    # Call the reactive expression and store its result
-    data <- educationData() # Correctly calling the reactive expression
-    
-    leaflet(data = data) %>%
-    fitBounds(-125, 24.396308, -66.934570, 49.384358) %>% # Fit the map to the US bounds
-      addProviderTiles(providers$CartoDB.Positron) %>%
-      addPolygons(fillColor = ~colorQuantile("YlOrRd", Education_Level)(Education_Level),
-                  fillOpacity = 0.7,
-                  weight = 1,
-                  color = "white",
-                  dashArray = "3",
-                  highlightOptions = highlightOptions(weight = 3,
-                                                       color = "#666",
-                                                       dashArray = "",
-                                                       fillOpacity = 0.7,
-                                                       bringToFront = TRUE),
-                  popup = ~paste(NAME, "<br>",
-                       "Less than HS Diploma: ", round(Education_Less_HS, 2), "%<br>",
-                       "High School Diploma Only: ", round(High_School_Diploma_Only, 2), "%<br>",
-                       "Some College: ", round(Some_College, 2), "%<br>",
-                       "Bachelor's or Higher: ", round(Bachelors_Or_Higher, 2), "%")
-      ) %>%
-      addLegend("bottomright", pal = colorQuantile("YlOrRd", data$Education_Level), values = ~Education_Level,
-                title = input$educationAttribute,
-                opacity = 0.7)
+    return(merged_covid_data)
   })
 
 
 
-output$covidMapOutput <- renderLeaflet({
-  data <- covidData() # Use the reactive COVID data
- # Generate popup content dynamically based on selected attribute
-  
-  
-  leaflet(data = data) %>%
-    fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
-    addProviderTiles(providers$CartoDB.Positron) %>%
-    addPolygons(fillColor = ~colorQuantile("YlOrRd", COVID_Level)(COVID_Level),
-                fillOpacity = 0.7,
-                weight = 1,
-                color = "white",
-                dashArray = "3",
-                highlightOptions = highlightOptions(weight = 3,
-                                                     color = "#666",
-                                                     dashArray = "",
-                                                     fillOpacity = 0.7,
-                                                     bringToFront = TRUE),
-                 popup = ~paste(NAME, "<br>",
-                            "Cases" = formatC(as.integer(Cases), big.mark=","),
-                            "Deaths" = formatC(as.integer(Deaths), big.mark=","))
-                ) %>%
-    addLegend("bottomright",  pal = colorQuantile("YlOrRd", data$COVID_Level), values = ~COVID_Level,
-              title = input$covidAttribute,
-              opacity = 0.7)
-})
-#addLegend("bottomright", pal = colorQuantile("YlOrRd", data$Education_Level), values = ~Education_Level,
-                #title = input$educationAttribute,
-                #opacity = 0.7)
+  pal <- colorBin(palette = "YlOrRd", domain = c(0, 30), bins = 5, na.color = "transparent")
+
+  # Output for the map, which depends on the reactive education data
+  output$mapOutput <- renderLeaflet({
+    # Call the reactive expression and store its result
+    data <- educationData() # Correctly calling the reactive expression
+
+    leaflet(data = data) %>%
+      fitBounds(-125, 24.396308, -66.934570, 49.384358) %>% # Fit the map to the US bounds
+      addProviderTiles(providers$CartoDB.Positron) %>%
+      addPolygons(
+        fillColor = ~ colorQuantile("YlOrRd", Education_Level)(Education_Level),
+        fillOpacity = 0.7,
+        weight = 1,
+        color = "white",
+        dashArray = "3",
+        highlightOptions = highlightOptions(
+          weight = 3,
+          color = "#666",
+          dashArray = "",
+          fillOpacity = 0.7,
+          bringToFront = TRUE
+        ),
+        popup = ~ paste(
+          NAME, "<br>",
+          "Less than HS Diploma: ", round(Education_Less_HS, 2), "%<br>",
+          "High School Diploma Only: ", round(High_School_Diploma_Only, 2), "%<br>",
+          "Some College: ", round(Some_College, 2), "%<br>",
+          "Bachelor's or Higher: ", round(Bachelors_Or_Higher, 2), "%"
+        )
+      ) %>%
+      addLegend("bottomright",
+        pal = pal, values = c(0, 30), # Manually set legend values
+        title = input$educationAttribute,
+        opacity = 0.7,
+        labFormat = labelFormat(suffix = "%")
+      )
+  })
+
+
+
+  output$covidMapOutput <- renderLeaflet({
+    data <- covidData() # Use the reactive COVID data
+    # Generate popup content dynamically based on selected attribute
+
+
+    leaflet(data = data) %>%
+      fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
+      addProviderTiles(providers$CartoDB.Positron) %>%
+      addPolygons(
+        fillColor = ~ colorQuantile("PuBuGn", COVID_Level)(COVID_Level),
+        fillOpacity = 0.7,
+        weight = 1,
+        color = "white",
+        dashArray = "3",
+        highlightOptions = highlightOptions(
+          weight = 3,
+          color = "#666",
+          dashArray = "",
+          fillOpacity = 0.7,
+          bringToFront = TRUE
+        ),
+        popup = ~ paste(
+          NAME, "<br>",
+          "Cases: ", formatC(as.integer(Cases), big.mark = ","), "<br>",
+          "Deaths: ", formatC(as.integer(Deaths), big.mark = ","), "<br>",
+          "Doses Distributed: ", formatC(as.integer(Doses_Distributed), big.mark = ","), "<br>",
+          "Doses Administered: ", formatC(as.integer(Doses_Administered), big.mark = ",")
+        )
+      )
+    # ) %>%
+    # addLegend("bottomright",  pal = colorQuantile("YlOrRd", data$COVID_Level), values = ~COVID_Level,
+    #           title = input$covidAttribute,
+    #           opacity = 0.7)
+  })
+
   # No need for observeEvent if the map automatically updates with input$apply due to reactive dependencies
 }
 
