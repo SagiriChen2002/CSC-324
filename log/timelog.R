@@ -33,7 +33,7 @@ ggplot(data, aes(x=Date, y=Duration)) +  # Replace 'Value' with the actual value
 aggregate_data <- aggregate(Duration ~ Date, data, mean, na.rm = TRUE)
 # Create a bar plot
 aggregate_data$FormattedDate <- format(aggregate_data$Date, "%m-%d")
-y_max <- 4  # Adds 10% padding to the max value for better display
+y_max <- 6  # Adds 10% padding to the max value for better display
 barplot(aggregate_data$Duration,
         names.arg = aggregate_data$FormattedDate,
         col = "blue",
