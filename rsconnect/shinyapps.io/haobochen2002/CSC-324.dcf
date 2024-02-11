@@ -5,8 +5,9 @@ account: haobochen2002
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11194501
-bundleId: 8243481
+bundleId: 8244112
 url: https://haobochen2002.shinyapps.io/CSC-324/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: .idea/CSC-324.iml|.idea/misc.xml|.idea/modules.xml|.idea/vcs.xml|.idea/workspace.xml|Archive.zip|changename.py|individual-project.html|log/us-states.numbers|README.md|RELEASE OF LIABILITY - GitHub FINAL 20210618.pdf
