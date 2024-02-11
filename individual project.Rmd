@@ -43,8 +43,8 @@ education_data <- read_csv("database/Education.csv")
 covid_data <- read_csv("database/us-states.csv")
 
 # Aggregate the education data to state level
-# Assuming 'State' is the state name or code that matches the shapefile
-# and you're interested in "Percent of adults with less than a high school diploma"
+# 'State' is the state name or code that matches the shapefile
+# and we are using "Percent of adults with less than a high school diploma"
 education_state_level <- education_data %>%
   group_by(state) %>%
   summarise(
@@ -108,7 +108,7 @@ ui <- dashboardPage(
             width = 9,
             tags$h3("Education Map"), # Adds the title above the first map
             leafletOutput("mapOutput"), # Display the education map
-            tags$h3("COVID-19 Map"), # Optional: similarly, you might want to add a title for the COVID map for consistency
+            tags$h3("COVID-19 Map"), # Adds the title above the second map
             leafletOutput("covidMapOutput") # Display the COVID map
           )
         )
@@ -176,6 +176,14 @@ server <- function(input, output, session) {
     return(merged_data)
   })
 
+  education_data_reactive <- reactive({
+    education_data <- read_csv("database/Education.csv") %>%
+      select(State, `Percent of adults with a bachelor's degree or higher`) %>%
+      arrange(desc(`Percent of adults with a bachelor's degree or higher`)) %>%
+      head(10)  # Keep top 10 states
+    return(education_data)
+  })
+
   # Reactive expression for loading and preparing COVID data for 2023-03-23
   covidData <- reactive({
     # Load COVID data
@@ -185,7 +193,7 @@ server <- function(input, output, session) {
 
     # Load and prepare vaccine data (assuming this step is correct)
     vaccine_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv") %>%
-      # Ensure this select statement matches your data structure
+      # Select the necessary columns for summarization
       select(state, doses_distributed, doses_administered)
 
     # Merge COVID data with vaccine data on state
@@ -221,13 +229,13 @@ server <- function(input, output, session) {
 
   # Example reactive expression to fetch maximum values
   maxValues <- reactive({
-    # Assuming you have a dataframe `covid_data` loaded with relevant attributes
+    # Load the necessary data
     vaccine_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv")%>%
-      # Ensure this select statement matches your data structure
+    # Select the necessary columns for summarization
     select(state, doses_distributed, doses_administered)
     covid_data <- read_csv("database/us-states-output.csv")
 
-    # Define maximum values for each attribute, ideally dynamically calculated from your data
+    # Define maximum values for each attribute
     max_cases <- max(covid_data$Cases, na.rm = TRUE)
     max_deaths <- max(covid_data$Deaths, na.rm = TRUE)
     max_vaccines_distributed <- max(vaccine_data$doses_distributed, na.rm = TRUE)
