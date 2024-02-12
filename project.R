@@ -1,21 +1,4 @@
----
-title: "COVID-19_project"
-author: "Haobo Chen"
-output: html_document
-date: "2024-02-04"
-editor_options: 
-  markdown: 
-    wrap: 72
----
 
-Academic Honesty Name(s) of all authors: Haobo Chen Assignment name:
-Individual Project Assignment due date: TBD Written/online sources used:
-None Help obtained (Acknowledgments): None Add the statement: We confirm
-that the above list of sources is complete AND that we have not talked
-to anyone else about the solution to this problem.
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -32,11 +15,10 @@ library(shinydashboard)
 library(lubridate)
 library(viridis) # For color palettes
 library(RColorBrewer)
-```
+
 
 ## Building an R Shiny app
 
-```{r}
 
 # Load the education data
 education_data <- read_csv("database/Education.csv")
@@ -60,12 +42,7 @@ covid_state_level <- covid_data %>%
   group_by(state) %>%
   summarise(Cases = sum(cases), Deaths = sum(deaths))
 
-# Match state abbreviations in shapefile with those in education data
-merged_data <- us_states %>%
-  left_join(education_state_level, by = c("STUSPS" = "state"))
 
-merged_data <- us_states %>%
-  left_join(covid_state_level, by = c("STUSPS" = "state"))
 
 
 
@@ -87,21 +64,21 @@ ui <- dashboardPage(
             width = 3,
             # Add a menu input for the user to select the education level
             selectInput("educationAttribute", "Choose Education Level:",
-              choices = c(
-                "Percent of adults with less than a high school diploma" = "Percent of adults with less than a high school diploma",
-                "Percent of adults with a high school diploma only" = "High school diploma only",
-                "Percent of adults with some college or associate's degree" = "Some college or associate's degree",
-                "Percent of adults with a bachelor's degree or higher" = "Bachelor's degree or higher"
-              )
+                        choices = c(
+                          "Percent of adults with less than a high school diploma" = "Percent of adults with less than a high school diploma",
+                          "Percent of adults with a high school diploma only" = "High school diploma only",
+                          "Percent of adults with some college or associate's degree" = "Some college or associate's degree",
+                          "Percent of adults with a bachelor's degree or higher" = "Bachelor's degree or higher"
+                        )
             ),
             tags$div(style = "margin-bottom: 400px;"), # Adds 400px of space below the first input.
             selectInput("covidAttribute", "Choose COVID-19 Attribute:",
-              choices = c(
-                "Cases" = "Cases",
-                "Deaths" = "Deaths",
-                "Vaccine Distributed" = "doses_distributed",
-                "Vaccine Administered" = "doses_administered"
-              )
+                        choices = c(
+                          "Cases" = "Cases",
+                          "Deaths" = "Deaths",
+                          "Vaccine Distributed" = "doses_distributed",
+                          "Vaccine Administered" = "doses_administered"
+                        )
             )
           ),
           column(
@@ -141,19 +118,19 @@ ui <- dashboardPage(
             tags$h3("Top 10 States by Doses Administered"),
             plotOutput("topTenStatesPlot")
             
-
-
+            
+            
           )
         )
       )
     )
   )
 )
-```
+
 
 ## Server function
 
-```{r}
+
 # Step 1: Create a state name to abbreviation mapping
 
 server <- function(input, output, session) {
@@ -168,14 +145,14 @@ server <- function(input, output, session) {
         Some_College = mean(`Percent of adults completing some college or associate's degree`, na.rm = TRUE),
         Bachelors_Or_Higher = mean(`Percent of adults with a bachelor's degree or higher`, na.rm = TRUE)
       )
-
+    
     merged_data <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp") %>%
       st_transform(., 4326) %>%
       left_join(education_data, by = c("STUSPS" = "state"))
-
+    
     return(merged_data)
   })
-
+  
   education_data_reactive <- reactive({
     education_data <- read_csv("database/Education.csv") %>%
       select(State, `Percent of adults with a bachelor's degree or higher`) %>%
@@ -183,22 +160,22 @@ server <- function(input, output, session) {
       head(10)  # Keep top 10 states
     return(education_data)
   })
-
+  
   # Reactive expression for loading and preparing COVID data for 2023-03-23
   covidData <- reactive({
     # Load COVID data
     covid_data <- read_csv("database/us-states-output.csv") %>%
       mutate(Date = as.Date(date, format = "%m/%d/%y")) %>%
       filter(Date == as.Date("2023-03-23", format = "%Y-%m-%d"))
-
+    
     # Load and prepare vaccine data (assuming this step is correct)
     vaccine_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv") %>%
       # Select the necessary columns for summarization
       select(state, doses_distributed, doses_administered)
-
+    
     # Merge COVID data with vaccine data on state
     covid_data <- left_join(covid_data, vaccine_data, by = "state")
-
+    
     # Summarise data after ensuring all necessary columns are present
     summarised_data <- covid_data %>%
       group_by(state) %>%
@@ -209,15 +186,15 @@ server <- function(input, output, session) {
         Doses_Distributed = sum(doses_distributed, na.rm = TRUE),
         Doses_Administered = sum(doses_administered, na.rm = TRUE)
       )
-
+    
     # Merge summarised data with geographic data
     merged_covid_data <- st_read("US_geographic_dataset/cb_2018_us_state_20m.shp") %>%
       st_transform(., 4326) %>%
       left_join(summarised_data, by = c("STUSPS" = "state"))
-
+    
     return(merged_covid_data)
   })
-
+  
   vaccine_data_reactive <- reactive({
     vaccine_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv") %>%
       select(state, doses_administered) %>%
@@ -225,22 +202,22 @@ server <- function(input, output, session) {
       head(10)  # Keep top 10 states with most doses administered
     return(vaccine_data)
   })
-
-
+  
+  
   # Example reactive expression to fetch maximum values
   maxValues <- reactive({
     # Load the necessary data
     vaccine_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv")%>%
-    # Select the necessary columns for summarization
-    select(state, doses_distributed, doses_administered)
+      # Select the necessary columns for summarization
+      select(state, doses_distributed, doses_administered)
     covid_data <- read_csv("database/us-states-output.csv")
-
+    
     # Define maximum values for each attribute
     max_cases <- max(covid_data$Cases, na.rm = TRUE)
     max_deaths <- max(covid_data$Deaths, na.rm = TRUE)
     max_vaccines_distributed <- max(vaccine_data$doses_distributed, na.rm = TRUE)
     max_vaccines_administered <- max(vaccine_data$doses_administered, na.rm = TRUE)
-
+    
     # Select the maximum value based on the current input selection
     if (input$covidAttribute == "Cases") {
       return(max_cases)
@@ -254,15 +231,15 @@ server <- function(input, output, session) {
       return(12000000) # Default case, should ideally never be reached
     }
   })
-
-
+  
+  
   pal1 <- colorBin(palette = "PuBuGn", domain = c(0, 30), bins = 5, na.color = "transparent")
-
+  
   # Output for the map, which depends on the reactive education data
   output$mapOutput <- renderLeaflet({
     # Call the reactive expression and store its result
     data <- educationData() # Correctly calling the reactive expression
-
+    
     leaflet(data = data) %>%
       fitBounds(-125, 24.396308, -66.934570, 49.384358) %>% # Fit the map to the US bounds
       addProviderTiles(providers$CartoDB.Positron) %>%
@@ -281,14 +258,14 @@ server <- function(input, output, session) {
         ),
       ) %>%
       addLegend("bottomright",
-        pal = pal1, values = c(0, 30), # Manually set legend values
-        title = input$educationAttribute,
-        opacity = 0.7,
-        labFormat = labelFormat(suffix = "%")
+                pal = pal1, values = c(0, 30), # Manually set legend values
+                title = input$educationAttribute,
+                opacity = 0.7,
+                labFormat = labelFormat(suffix = "%")
       )
   })
-
-
+  
+  
   output$covidMapOutput <- renderLeaflet({
     data <- covidData() # Use the reactive COVID data
     # Generate popup content dynamically based on selected attribute YlOrRd PuBuGn
@@ -296,8 +273,8 @@ server <- function(input, output, session) {
     
     # Now create the color palette with the dynamically determined domain
     pal2 <- colorBin(palette = "YlOrRd", domain = c(0, maxValue), bins = 5, na.color = "transparent")
-
-
+    
+    
     leaflet(data = data) %>%
       fitBounds(-125, 24.396308, -66.934570, 49.384358) %>%
       addProviderTiles(providers$CartoDB.Positron) %>%
@@ -323,70 +300,70 @@ server <- function(input, output, session) {
         )
       ) %>%
       addLegend("bottomright",
-        pal = pal2,
-        values = c(0, maxValues()), # Use the reactive maximum value
-        title = input$covidAttributes,
-        opacity = 0.7,
-        # labFormat = labelFormat(suffix = "%")
+                pal = pal2,
+                values = c(0, maxValues()), # Use the reactive maximum value
+                title = input$covidAttributes,
+                opacity = 0.7,
+                # labFormat = labelFormat(suffix = "%")
       )
   })
-
-observeEvent(input$plotGraph, {
-  # Load COVID data
-  covid_data <- read_csv("database/us-states-output.csv") %>%
-    mutate(Date = as.Date(date, format = "%m/%d/%y")) %>%
-    filter(Date == as.Date("2023-03-23", format = "%Y-%m-%d"))
   
-  # Load and prepare vaccine data
-  vaccine_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv") %>%
-    select(state, doses_distributed, doses_administered)
+  observeEvent(input$plotGraph, {
+    # Load COVID data
+    covid_data <- read_csv("database/us-states-output.csv") %>%
+      mutate(Date = as.Date(date, format = "%m/%d/%y")) %>%
+      filter(Date == as.Date("2023-03-23", format = "%Y-%m-%d"))
+    
+    # Load and prepare vaccine data
+    vaccine_data <- read_csv("database/cdc_vaccines_distributed_administered_by_jurisdiction.csv") %>%
+      select(state, doses_distributed, doses_administered)
+    
+    # Merge COVID data with vaccine data on state
+    merged_covid_vaccine_data <- left_join(covid_data, vaccine_data, by = "state")
+    
+    # Prepare the merged data based on user selection
+    # Dynamically select the COVID attribute or vaccine data for summarization
+    summarised_data <- merged_covid_vaccine_data %>%
+      group_by(state) %>%
+      summarise(COVID_Attribute = sum(case_when(
+        input$covidAttributeGraph == "Cases" ~ Cases,
+        input$covidAttributeGraph == "Deaths" ~ Deaths,
+        input$covidAttributeGraph == "doses_distributed" ~ doses_distributed,
+        input$covidAttributeGraph == "doses_administered" ~ doses_administered,
+        TRUE ~ NA_real_  # Default case if none of the above match
+      ), na.rm = TRUE)) %>%
+      ungroup()
+    
+    # Load and prepare education data similarly to previous examples
+    
+    education_data <- read_csv("database/Education.csv") %>%
+      group_by(state) %>%
+      summarise(Education_Level = mean(get(input$educationAttributeGraph), na.rm = TRUE)) %>%
+      ungroup()
+    
+    # Assuming 'State' in education_data matches 'state' in summarised_data
+    # Merge education data with summarised COVID/vaccine data
+    plot_data <- left_join(education_data, summarised_data, by = c("state" = "state"))
+    
+    # Generate the plot if plot_data is not empty
+    if(nrow(plot_data) > 0) {
+      output$linePlot <- renderPlot({
+        ggplot(plot_data, aes(x = Education_Level, y = COVID_Attribute)) +
+          geom_point() +  # Choosing geom_point for a scatter plot
+          geom_smooth(method = "lm", se = FALSE, color = "red") +
+          labs(x = input$educationAttributeGraph, y = input$covidAttributeGraph, title = "Education Level vs. COVID-19 Attribute") +
+          theme_minimal()
+      })
+    } else {
+      output$linePlot <- renderPlot({
+        ggplot() + 
+          geom_blank() +
+          labs(title = "No data available for the selected criteria")
+      })
+    }
+  })
   
-  # Merge COVID data with vaccine data on state
-  merged_covid_vaccine_data <- left_join(covid_data, vaccine_data, by = "state")
-  
-  # Prepare the merged data based on user selection
-  # Dynamically select the COVID attribute or vaccine data for summarization
-  summarised_data <- merged_covid_vaccine_data %>%
-    group_by(state) %>%
-    summarise(COVID_Attribute = sum(case_when(
-      input$covidAttributeGraph == "Cases" ~ Cases,
-      input$covidAttributeGraph == "Deaths" ~ Deaths,
-      input$covidAttributeGraph == "doses_distributed" ~ doses_distributed,
-      input$covidAttributeGraph == "doses_administered" ~ doses_administered,
-      TRUE ~ NA_real_  # Default case if none of the above match
-    ), na.rm = TRUE)) %>%
-    ungroup()
-  
-  # Load and prepare education data similarly to previous examples
-  
-  education_data <- read_csv("database/Education.csv") %>%
-    group_by(state) %>%
-    summarise(Education_Level = mean(get(input$educationAttributeGraph), na.rm = TRUE)) %>%
-    ungroup()
-  
-  # Assuming 'State' in education_data matches 'state' in summarised_data
-  # Merge education data with summarised COVID/vaccine data
-  plot_data <- left_join(education_data, summarised_data, by = c("state" = "state"))
-  
-  # Generate the plot if plot_data is not empty
-  if(nrow(plot_data) > 0) {
-    output$linePlot <- renderPlot({
-      ggplot(plot_data, aes(x = Education_Level, y = COVID_Attribute)) +
-        geom_point() +  # Choosing geom_point for a scatter plot
-        geom_smooth(method = "lm", se = FALSE, color = "red") +
-        labs(x = input$educationAttributeGraph, y = input$covidAttributeGraph, title = "Education Level vs. COVID-19 Attribute") +
-        theme_minimal()
-    })
-  } else {
-    output$linePlot <- renderPlot({
-      ggplot() + 
-        geom_blank() +
-        labs(title = "No data available for the selected criteria")
-    })
-  }
-})
-
-output$topTenStatesPlot <- renderPlot({
+  output$topTenStatesPlot <- renderPlot({
     vaccine_data <- vaccine_data_reactive()  # Get the reactive vaccine data
     
     ggplot(vaccine_data, aes(x = reorder(state, doses_administered), y = doses_administered, fill = state)) +
@@ -401,4 +378,3 @@ output$topTenStatesPlot <- renderPlot({
 
 # Run the app
 shinyApp(ui, server)
-```
