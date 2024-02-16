@@ -396,6 +396,18 @@ output$topTenStatesPlot <- renderPlot({
       theme_minimal() +
       scale_fill_viridis_d()  # Apply a discrete viridis color palette
   })
+
+  output$bubbleChart <- renderPlot({
+    vaccine_data <- read_csv("cdc_vaccines_distributed_administered_by_jurisdiction.csv")
+
+# Create a bubble plot
+ggplot(vaccine_data, aes(x = doses_distributed, y = doses_administered, size = population)) +
+  geom_point() +
+  labs(title = "Bubble Plot of Doses Distributed vs. Doses Administered",
+       x = "Doses Distributed",
+       y = "Doses Administered",
+       size = "Population")
+  })
   # No need for observeEvent if the map automatically updates with input$apply due to reactive dependencies
 }
 
