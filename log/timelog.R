@@ -28,7 +28,6 @@ ggplot(data, aes(x=Date, y=Duration)) +  # Replace 'Value' with the actual value
   geom_point() +  # Or geom_line() if you want to connect the points
   labs(title="Individual Project Time Log", x="Date", y="Time") +
   theme_minimal()
-
 # Aggregate data to calculate average duration per week
 aggregate_data <- aggregate(Duration ~ Date, data, mean, na.rm = TRUE)
 # Create a bar plot
