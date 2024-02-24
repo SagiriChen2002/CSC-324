@@ -1,15 +1,14 @@
 WEEK,TASKS,TIME
-Week 1,Selected dataset and came up with the questions that worth being answered via analyzing the dataset. Downloaded the dataset and set up folders on the PC. Set up coding environment,01-26-2024 8:30PM - 10:28PM
-,Browsed through the dataset and went through its documentation. Figured out the meaning of each column and wrote down the framework of the project that I planned to finish.,01-30-2024 3:10PM - 5:00PM
-,,
-Week 2,Set up the time log and related graph Setup and loaded necessary libraries.,02-04-2024 1:00PM - 2:12PM
-,Brainstorm the structure of the project and search for necessay resources,02-05-2024 5:00PM - 7:00PM
-Week 3,Study how to code in R. Setup the basic structure for the project. Search for additional data for the education part,02-07-2024 7:00PM - 10:00 PM
-,Generated the first set of graph. Integarted two graph into the R shiny implemenation,02-09-2024 8:00PM - 9:00PM
-,Fix map2 about vaccine level. Study the way to upload R shiny. Add line graph and historgrams,02-11-2024 10:00AM - 3:00PM
-Week 4,,
-,,
-,,
-Week 5,,
-,,
-Week 6,,
+1,Selected dataset and came up with the questions that worth being answered via analyzing the dataset. Downloaded the dataset and set up folders on the PC. Set up coding environment,01-26-2024 8:30PM - 10:28PM
+1,Browsed through the dataset and went through its documentation. ,01-30-2024 3:10PM - 5:00PM
+1,Brainstorm the topic of the visualization and come with the question for the visualization,01-31-2024 9:00PM - 9:30PM
+2,Set up the time log and related graph Setup and loaded necessary libraries.,02-04-2024 1:00PM - 2:12PM
+2,Brainstorm the structure of the project and search for necessay resources,02-05-2024 5:00PM - 7:00PM
+3,Study how to code in R. Setup the basic structure for the project. Search for additional data for the education part,02-07-2024 7:00PM - 10:00 PM
+3,Generated the first set of graph. Integarted two graph into the R shiny implemenation,02-09-2024 8:00PM - 9:00PM
+3,Fix map2 about vaccine level. Study the way to upload R shiny. Add line graph and historgrams,02-11-2024 10:00AM - 3:00PM
+4,Learn the way to generate better historgram and bubble chart. Try to fix the historgrams,02-13-2024 7:00PM - 9:35PM
+4,Learn the way to create an interactive map. Merge COVID-19 data set with geo data,02-15-2024 9:00PM - 10:00PM
+4,Generate the map for COVID-19 and Education condition. Try to add a legend that is scalable to the map,02-18-2024 5:00PM - 7:00PM
+5,Add an additional interactive dot graph. Draw the regression line on the graph,02-20-2024 7:00PM - 9:00PM
+5,Add and format comments for code. Try to find bug about Education map,02-24-2024 8:00AM - 10:00AM

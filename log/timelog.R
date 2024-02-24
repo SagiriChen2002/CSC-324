@@ -39,9 +39,16 @@ barplot(aggregate_data$Duration,
         col = "blue",
         main = "Individual Project Time Log",
         xlab = "Date",
-        ylab = "Average Duration (mins)",
+        ylab = "Average Duration (hours)",
         ylim = c(0, y_max),  # Adjust y-axis limits
         las = 2,  # Makes the axis labels perpendicular to the axis
         cex.names = 0.7)  # Adjusts the size of the week labels
 
-
+weekly_duration <- aggregate(Duration ~ WEEK, data, sum)
+weekly_duration$WeekLabel <- paste("Week", weekly_duration$WEEK)
+ggplot(weekly_duration, aes(x="", y=Duration, fill=WeekLabel)) +
+  geom_bar(width = 1, stat = "identity") +
+  coord_polar("y", start=0) + 
+  labs(title="Project Weekly Working Time", x="", y="", fill="Week") +
+  theme_void() +
+  theme(legend.title = element_text(size=12), legend.text = element_text(size=10))
