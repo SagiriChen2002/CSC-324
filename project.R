@@ -70,13 +70,13 @@ ui <- dashboardPage(
             selectInput("educationAttribute", "Choose Education Level:",
               choices = c(
                 "Percent of adults with less than a high school diploma" = "Percent of adults with less than a high school diploma",
-                "Percent of adults with a high school diploma only" = "High school diploma only",
-                "Percent of adults with some college or associate's degree" = "Some college or associate's degree",
-                "Percent of adults with a bachelor's degree or higher" = "Bachelor's degree or higher"
+                "Percent of adults with a high school diploma only" = "Percent of adults with a high school diploma only",
+                "Percent of adults with some college or associate's degree" = "Percent of adults completing some college or associate's degree",
+                "Percent of adults with a bachelor's degree or higher" = "Percent of adults with a bachelor's degree or higher"
               )
             ),
             # Adds 400px of space below the first input to make space for the second inputs
-            tags$div(style = "margin-bottom: 400px;"), 
+            tags$div(style = "margin-bottom: 400px;"),
             # Select the two attributes for the map (COVID-19 data)
             selectInput("covidAttribute", "Choose COVID-19 Attribute:",
               choices = c(
@@ -90,13 +90,15 @@ ui <- dashboardPage(
           column(
             width = 9,
             # Adds the title above the first map
-            tags$h3("Education Map"), 
+            tags$h3("Education Map"),
             # Display the education map
-            leafletOutput("mapOutput"), 
+            leafletOutput("mapOutput"),
             # Adds the title above the second map
-            tags$h3("COVID-19 Map"), 
+            tags$h3("COVID-19 Map"),
             # Display the COVID map
-            leafletOutput("covidMapOutput") 
+            leafletOutput("covidMapOutput"),
+            textOutput("text"),
+            tableOutput("description")
           )
         )
       ),
@@ -109,16 +111,16 @@ ui <- dashboardPage(
             # Select the education attribute for the graph
             selectInput("educationAttributeGraph", "Choose Education Level:", choices = c(
               "Percent of adults with less than a high school diploma" = "Percent of adults with less than a high school diploma",
-              "Percent of adults with a high school diploma only" = "High school diploma only",
-              "Percent of adults with some college or associate's degree" = "Some college or associate's degree",
-              "Percent of adults with a bachelor's degree or higher" = "Bachelor's degree or higher"
+              "Percent of adults with a high school diploma only" = "Percent of adults with a high school diploma only",
+              "Percent of adults with some college or associate's degree" = "Percent of adults completing some college or associate's degree",
+              "Percent of adults with a bachelor's degree or higher" = "Percent of adults with a bachelor's degree or higher"
             )),
             # Select the COVID-19 attribute for the graph
             selectInput("covidAttributeGraph", "Choose COVID-19 Attribute:", choices = c(
               "Cases" = "Cases",
               "Deaths" = "Deaths",
-              "Vaccine Distributed" = "doses_distributed",
-              "Vaccine Administered" = "doses_administered"
+              "Vaccine Distributed" = "Vaccine Distributed",
+              "Vaccine Administered" = "Vaccine Administered"
             )),
             # Add a button to plot the graph
             actionButton("plotGraph", "Plot Graph")
@@ -178,7 +180,7 @@ server <- function(input, output, session) {
       select(State, `Percent of adults with a bachelor's degree or higher`) %>%
       arrange(desc(`Percent of adults with a bachelor's degree or higher`)) %>%
       # Keep top 10 states
-      head(10) 
+      head(10)
     return(education_data)
   })
 
@@ -226,7 +228,7 @@ server <- function(input, output, session) {
       select(state, doses_administered_per_100k, population) %>%
       arrange(desc(doses_administered_per_100k)) %>%
       # Keep top 10 states with most doses administered per 100k people
-      head(10) 
+      head(10)
     return(vaccine_data)
   })
 
@@ -311,7 +313,7 @@ server <- function(input, output, session) {
   # Output for the COVID map, which depends on the reactive COVID data
   output$covidMapOutput <- renderLeaflet({
     #  Use the reactive COVID data
-    data <- covidData() 
+    data <- covidData()
     # Get the maximum value for the color palette
     maxValue <- maxValues()
 
@@ -351,6 +353,35 @@ server <- function(input, output, session) {
       )
   })
 
+  output$text <- renderText({
+    paste("In this project, we aim to analyze the relationship between the education level and COVID-19 information, including cases, death, and vaccines.\n",
+      "The first tab contains two maps. The first map displays the education level of each state, and the second map displays the COVID-19 attribute of each state.\n",
+      "The second tab contains a line graph, a bar plot, and a bubble chart. The line graph displays the relationship between the selected education level and COVID-19 attribute.",
+      sep = ""
+    )
+  })
+
+  output$description <- renderTable({
+    data.frame(
+      Description = c("Percent of adults with less than a high school diploma",
+                      "Percent of adults with a high school diploma only",
+                      "Percent of adults completing some college or associate's degree",
+                      "Percent of adults with a bachelor's degree or higher",
+                      "Cases",
+                      "Deaths",
+                      "Vaccine Distributed",
+                      "Vaccine Administered"),
+      Explanation = c("The percentage of adults in the state with less than a high school diploma.",
+                      "The percentage of adults in the state with a high school diploma only.",
+                      "The percentage of adults in the state completing some college or associate's degree.",
+                      "The percentage of adults in the state with a bachelor's degree or higher.",
+                      "The number of COVID-19 cases in the state.",
+                      "The number of COVID-19 deaths in the state.",
+                      "The number of COVID-19 vaccine doses distributed in the state.",
+                      "The number of COVID-19 vaccine doses administered in the state.")
+    )
+  }, rownames = FALSE)
+
   # Observe the plotGraph button and generate the line plot
   observeEvent(input$plotGraph, {
     # Load and prepare COVID data
@@ -372,9 +403,9 @@ server <- function(input, output, session) {
       summarise(COVID_Attribute = sum(case_when(
         input$covidAttributeGraph == "Cases" ~ Cases,
         input$covidAttributeGraph == "Deaths" ~ Deaths,
-        input$covidAttributeGraph == "doses_distributed" ~ doses_distributed,
-        input$covidAttributeGraph == "doses_administered" ~ doses_administered,
-        TRUE ~ NA_real_ 
+        input$covidAttributeGraph == "Vaccine Distributed" ~ doses_distributed,
+        input$covidAttributeGraph == "Vaccine Administered" ~ doses_administered,
+        TRUE ~ NA_real_
       ), na.rm = TRUE)) %>%
       ungroup()
 
@@ -392,13 +423,14 @@ server <- function(input, output, session) {
     if (nrow(plot_data) > 0) {
       output$linePlot <- renderPlot({
         ggplot(plot_data, aes(x = Education_Level, y = COVID_Attribute)) +
-          geom_point() + 
+          geom_point() +
           # Add a linear regression line
           geom_smooth(method = "lm", se = FALSE, color = "red") +
           labs(x = input$educationAttributeGraph, y = input$covidAttributeGraph, title = "Education Level vs. COVID-19 Attribute") +
-          theme_minimal()
+          theme_minimal() +
+          scale_y_continuous(name = "COVID Attribute")
       })
-    # Provide a message if no data is available for the selected criteria
+      # Provide a message if no data is available for the selected criteria
     } else {
       output$linePlot <- renderPlot({
         ggplot() +
@@ -411,15 +443,15 @@ server <- function(input, output, session) {
   # Output for the top ten states with the highest doses administered per 100k
   output$topTenStatesPlot <- renderPlot({
     # Get the reactive vaccine data
-    vaccine_data <- vaccine_data_reactive() 
+    vaccine_data <- vaccine_data_reactive()
     # Generate the plot
     ggplot(vaccine_data, aes(x = reorder(state, doses_administered_per_100k), y = doses_administered_per_100k, fill = state)) +
-      geom_col() + 
-      coord_flip() + 
+      geom_col() +
+      coord_flip() +
       labs(x = "State", y = "Doses Administered per 100,000", title = "Top 10 States by Doses Administered per 100k") +
       theme_minimal() +
       scale_fill_viridis_d() +
-      scale_y_continuous(labels = label_comma()) 
+      scale_y_continuous(labels = label_comma())
   })
 
   # Output for the bubble chart about vaccine distribution and death
@@ -452,8 +484,8 @@ server <- function(input, output, session) {
       ) +
       theme_minimal() +
       theme(legend.position = "right") +
-      scale_x_continuous(labels = label_comma()) + 
-      scale_y_continuous(labels = label_comma()) 
+      scale_x_continuous(labels = label_comma()) +
+      scale_y_continuous(labels = label_comma())
   })
 }
 
