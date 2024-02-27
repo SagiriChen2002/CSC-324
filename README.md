@@ -8,6 +8,8 @@ This repository contains the following:
 - A description of the three datasets.
 - A timelog folder which includes the time log and chart created in R for the project.
 - Two screenshot of the project progress.
+- A feedback from Vivero Digital Fellows program
+- A geographical coordinates dataset 
 
 ## About the App
 - Accessing the App:
@@ -22,7 +24,30 @@ This repository contains the following:
 ## Project Purpose
 The primary goal of this project is to study the relationship between COVID-19 and education level in US. In other words, I want to see if there is a relationship between the education level of a state and the COVID-19 condition in that state, including the number of cases, deaths and vaccine condition. There are four different education level attributes in the dataset, including the percentage of people with high school diploma, the percentage of people with bachelor degree, the percentage of people with graduate degree and the percentage of people with no high school diploma.
 
+
+## Data Description
+The descriptions of the three datasets are provided in the **Data description.pdf** file and the **Geographical coordinates.shp** file. The three datasets are:
+- **us_education_data**: Contains the education level of each state in US.
+- **us_states**: Contains total COVID-19 cases, deaths for each state in US at 2023-12-21.
+- **cdc_vaccines_distributed_administered_by_jurisdiction**: Contains the daily COVID-19 vaccine condition of each state in US 
+- **US_geographic_dataset**: Provides geographical coordinates for each state in US.
+
+
 ## Improvement Wishlist
+
+
+
+
+
+## What-Why-How Analysis Framework
+### 1. **What**
+
+
+### 2. **Why**
+
+
+### 3. **How**
+
 
 
 ## Sources or References
