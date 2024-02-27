@@ -3,7 +3,7 @@
 ## Description
 The repo for CSC-324 at Grinnell College by student Haobo Chen
 This repository contains the following:
-- The source code for the implementation of this COVID-19 and Education project, including a Shiny Web App file and an R Markdown file (the Shiny app is more up-to-date).
+- The source code for the implementation of this COVID-19 and Education project, including a Shiny Web App file and an R Markdown file.
 - The database folder which includes the three datasets used.
 - A description of the three datasets.
 - A timelog folder which includes the time log and chart created in R for the project.
@@ -31,6 +31,8 @@ The descriptions of the three datasets are provided in the **Data description.pd
 - **us_states**: Contains total COVID-19 cases, deaths for each state in US at 2023-12-21.
 - **cdc_vaccines_distributed_administered_by_jurisdiction**: Contains the daily COVID-19 vaccine condition of each state in US 
 - **US_geographic_dataset**: Provides geographical coordinates for each state in US.
+
+
 
 
 ## Improvement Wishlist
