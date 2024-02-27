@@ -51,3 +51,4 @@ ggplot(weekly_duration, aes(x="", y=Duration, fill=WeekLabel)) +
   labs(title="Project Weekly Working Time", x="", y="", fill="Week") +
   theme_void() +
   theme(legend.title = element_text(size=12), legend.text = element_text(size=10))
+
