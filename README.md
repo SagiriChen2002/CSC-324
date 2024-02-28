@@ -93,3 +93,4 @@ This interactive App is designed for:
 - [1] Kaggle. “Education by State,” Accessed Feb 1st, 2024. https://www.kaggle.com/code/mpwolke/education-by-state-2014-2018
 - [2] New York Times. “COVID-19 data,” Accessed Feb 1st, 2024. https://github.com/nytimes/covid-19-data
 - [3] Kaggle. “CDC COVID-19 Vaccine Tracker,” Accessed Feb 1st, 2024. https://www.kaggle.com/datasets/thedevastator/cdc-covid-19-vaccine-tracker
+- [4] U. C. Bureau, “Tiger/line shapefiles,” Census.gov, https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html (accessed Oct. 10, 2023). 
