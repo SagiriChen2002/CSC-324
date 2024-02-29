@@ -58,8 +58,10 @@ This interactive App is designed for:
 - Diagram: Add more interactive diagrams, such as pie chart and histogram, to allow users to explore different facets of the data.
 
 ## Data Tidying and Pre-processing
-- The data is read from three CSV files named `us_education_data.csv`, `us_states.csv` and `cdc_vaccines_distributed_administered_by_jurisdiction.csv`.
-- The `us_education_data.csv` file is merged with the `US_geographic_dataset.shp` file to create a new dataset.
+- The data is read from three CSV files named `education.csv`, `us_states.csv` and `cdc_vaccines_distributed_administered_by_jurisdiction.csv`.
+- The `education.csv` file is merged with the `US_geographic_dataset.shp` file to create a new dataset.
+- The `us_states.csv` file is merged with the `US_geographic_dataset.shp` file to create a new dataset.
+- The `cdc_vaccines_distributed_administered_by_jurisdiction.csv` file is merged with the `US_geographic_dataset.shp` file to create a new dataset.
 - The data is then grouped by `state` to calculate averages for various COVID-19 and education metrics.
 - The education level is calculated by the percentage of people with high school diploma, the percentage of people with bachelor degree, the percentage of people with graduate degree and the percentage of people with no high school diploma.
 - The following R libraries are used for processing and visualizing the data:
