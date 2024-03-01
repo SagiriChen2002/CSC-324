@@ -78,12 +78,12 @@ This interactive App is designed for:
 - The purpose of this app is to provide insights into how education levels across different states may correlate with COVID-19 impacts and vaccine distribution efforts. By analyzing and visualizing these relationships, the application can help policymakers, researchers, and the public understand the potential links between educational attainment and the pandemic's outcomes. This could inform targeted educational or health interventions, policy making, and resource allocation to mitigate the effects of the pandemic and improve public health responses.
 
 ### 3. **How**
-- General: The data is encoded using maps, scatter plots, bar plots, and bubble plots.
+- General: The data is encoded using maps.
     * Spatial Position: The primary encoding for the US map. States are positioned based on geographical coordinates.
-    * Color: Used to represent data magnitude. For instance, darker shades indicate higher cases or deaths.
-    * Coordinate: In scatter plots, the position on the x and y-axes indicates COVID attributes and Education level, respectively.
+    * Color: Used to represent data magnitude. For instance, darker shades indicate higher cases, deaths, vaccince distributed or vacccince administered.
 
-- Navigate: The Shiny app provides multiple views (map and scatter plot) to allow users to explore different facets of the data.
+
+- Navigate: The Shiny app provides multiple views to allow users to explore different facets of the data.
     * Users can select different attributes (e.g., cases or deaths) and time periods to view different data on the US map.
        
 - Interact:
