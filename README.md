@@ -84,7 +84,7 @@ This interactive App is designed for:
     * Coordinate: In scatter plots, the position on the x and y-axes indicates COVID attributes and Education level, respectively.
 
 - Navigate: The Shiny app provides multiple views (map and scatter plot) to allow users to explore different facets of the data.
-    * Users can select different attributes (e.g., cases or deaths) and time periods to view different data on the world map.
+    * Users can select different attributes (e.g., cases or deaths) and time periods to view different data on the US map.
        
 - Interact:
     * Click over states on the map provides detailed data for that state.
