@@ -1,4 +1,4 @@
-## Import libraries
+# Import libraries
 library(readr)
 library(dplyr)
 library(tidyr)
@@ -54,7 +54,8 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("Map", tabName = "map", icon = icon("globe")),
-      menuItem("Graph", tabName = "line_graph", icon = icon("line-chart"))
+      menuItem("Graph", tabName = "line_graph", icon = icon("line-chart")),
+      menuItem("Description", tabName = "description", icon = icon("info-circle"))
     )
   ),
   # Define the dashboard body with tab items
@@ -97,8 +98,7 @@ ui <- dashboardPage(
             tags$h3("COVID-19 Map"),
             # Display the COVID map
             leafletOutput("covidMapOutput"),
-            textOutput("text"),
-            tableOutput("description")
+            
           )
         )
       ),
@@ -136,6 +136,16 @@ ui <- dashboardPage(
             br(),
             tags$h3("Vaccines Distributed vs. Administered by State Population"),
             plotOutput("bubbleChart")
+          )
+        )
+      ),
+      tabItem(
+        tabName = "description",
+        fluidRow(
+          column(
+            width = 9,
+            textOutput("text"),
+            tableOutput("description")
           )
         )
       )

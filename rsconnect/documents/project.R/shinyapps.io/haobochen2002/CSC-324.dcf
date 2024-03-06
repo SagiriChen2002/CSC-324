@@ -5,9 +5,9 @@ account: haobochen2002
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 11194501
-bundleId: 8301053
+bundleId: 8317903
 url: https://haobochen2002.shinyapps.io/CSC-324/
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: .RData|changename.py|Dataset description.docx|Dataset description.pdf|log/.RData|log/time_logs.csv|README.md|RELEASE OF LIABILITY - GitHub FINAL 20210618.pdf|Screenshot 2024-02-26 at 3.08.28 PM.png|Screenshot 2024-02-26 at 3.08.38 PM.png|tempCodeRunnerFile.R|Vivero Feedback.docx
+ignoredFiles: .RData|Dataset description.docx|Dataset description.pdf|log/.RData|log/time_logs.csv|project description.pdf|README.md|RELEASE OF LIABILITY - GitHub FINAL 20210618.pdf|Screenshot 2024-02-26 at 3.08.28 PM.png|Screenshot 2024-02-26 at 3.08.38 PM.png|tempCodeRunnerFile.R|Vivero Feedback.docx|.idea
