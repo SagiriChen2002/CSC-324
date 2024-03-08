@@ -101,3 +101,9 @@ This interactive App is designed for:
 ## Appendix
 - Time Log Chart:
 ![Working time log](https://github.com/SagiriChen2002/CSC-324/blob/main/log/Screenshot%202024-03-08%20at%202.37.50%E2%80%AFPM.png)
+
+### a list of brief descriptions of the 100% requirements
+- [x] Combine various datasets.
+I used three datasets in this project, including the education level of each state in US, the total COVID-19 cases, deaths for each state in US at 2023-12-31 and the daily COVID-19 vaccine condition of each state in US. I combined these three datasets to create the project.
+- [x] Feedback report of your visit to the Vivero Digital Fellows program
+I included a feedback from Vivero Digital Fellows program in the repository.
