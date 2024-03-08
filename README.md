@@ -100,4 +100,4 @@ This interactive App is designed for:
 
 ## Appendix
 - Time Log Chart:
-![Working time log]()
+![Working time log](https://github.com/SagiriChen2002/CSC-324/blob/main/log/Screenshot%202024-03-08%20at%202.37.50%E2%80%AFPM.png)
