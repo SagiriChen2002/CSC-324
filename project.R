@@ -139,9 +139,11 @@ ui <- dashboardPage(
           )
         )
       ),
+      # Define the third tab item for the description
       tabItem(
         tabName = "description",
         fluidRow(
+          # Display the description and explanation of the project
           column(
             width = 9,
             textOutput("text"),
@@ -188,6 +190,7 @@ server <- function(input, output, session) {
     education_data <- read_csv("database/Education.csv") %>%
       # Select the necessary columns for summarizations
       select(State, `Percent of adults with a bachelor's degree or higher`) %>%
+      # Arrange the data in descending order
       arrange(desc(`Percent of adults with a bachelor's degree or higher`)) %>%
       # Keep top 10 states
       head(10)
@@ -280,7 +283,7 @@ server <- function(input, output, session) {
     } else if (input$covidAttribute == "doses_administered") {
       return(max_vaccines_administered)
     } else {
-      # Set default value to 12,000,000 (never reached in this case)
+      # Set default value to 12000000 (never reached in this case)
       return(12000000)
     }
   })
@@ -311,6 +314,7 @@ server <- function(input, output, session) {
           bringToFront = TRUE
         ),
       ) %>%
+      # Add a legend to the map
       addLegend("bottomright",
         pal = pal1, values = c(0, 30),
         title = input$educationAttribute,
@@ -347,6 +351,7 @@ server <- function(input, output, session) {
           fillOpacity = 0.7,
           bringToFront = TRUE
         ),
+        # Add a popup with the state name and COVID-19 information
         popup = ~ paste(
           NAME, "<br>",
           "Cases: ", formatC(as.integer(Cases), big.mark = ","), "<br>",
@@ -355,6 +360,7 @@ server <- function(input, output, session) {
           "Doses Administered: ", formatC(as.integer(Doses_Administered), big.mark = ",")
         )
       ) %>%
+      # Add a legend to the map
       addLegend("bottomright",
         pal = pal2,
         values = c(0, maxValues()),
@@ -363,6 +369,7 @@ server <- function(input, output, session) {
       )
   })
 
+  # Output for the description
   output$text <- renderText({
     paste("In this project, we aim to analyze the relationship between the education level and COVID-19 information, including cases, death, and vaccines.\n",
       "The first tab contains two maps. The first map displays the education level of each state, and the second map displays the COVID-19 attribute of each state.\n",
@@ -371,6 +378,7 @@ server <- function(input, output, session) {
     )
   })
 
+  # Output for the description table
   output$description <- renderTable({
     data.frame(
       Description = c("Percent of adults with less than a high school diploma",
