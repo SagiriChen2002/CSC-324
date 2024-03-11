@@ -15,11 +15,12 @@ This repository contains the following:
 - Accessing the App:
     You can either run the source code locally or access the app via this link:  https://haobochen2002.shinyapps.io/CSC-324/
 - App Description:
-    The app consists of two pages: one map page and one plot page.
+    The app consists of two pages: one map page, one plot page, and a description page.
     * Map page: This page consists two US maps with a sidebar. One map is about US education level and the other is about COVID-19 cases in US. From the sidebar, users can select the desired attribute to be displayed on the map, inlcuding 
     different education level and COVID-19 cases, deaths and vaccination condition. Additionally, there is also a project 
     statement, a brief introduction of the project and a brief introduction of the attributes.
-    * Page Two: This page displays three plots. The first is a scatter plot. Each dot represents a state. The x-axis indicates the education level of each state, with higher numbers indicating higher education level. The y-axis represents the total number of COVID-19-related cases, death and vaccine condition in each state. The choice of attribute can be selected from the sidebar. The second plot is a bar plot. It shows the top ten states with the highest vaccine coverage. The third plot is a bubble plot. It shows the relationship between the number of COVID-19 vaccine distributed and the number of COVID-19 vaccine administered in each state. The size of the bubbles represents the number of COVID-19 deaths in each state.
+    * Plot page: This page displays three plots. The first is a scatter plot. Each dot represents a state. The x-axis indicates the education level of each state, with higher numbers indicating higher education level. The y-axis represents the total number of COVID-19-related cases, death and vaccine condition in each state. The choice of attribute can be selected from the sidebar. The second plot is a bar plot. It shows the top ten states with the highest vaccine coverage. The third plot is a bubble plot. It shows the relationship between the number of COVID-19 vaccine distributed and the number of COVID-19 vaccine administered in each state. The size of the bubbles represents the number of COVID-19 deaths in each state.
+    * Description page: This page provides a brief introduction of the project, the attributes and the data sources.
 
 ## Project Purpose
 The primary goal of this project is to study the relationship between COVID-19 and education level in US. In other words, I want to see if there is a relationship between the education level of a state and the COVID-19 condition in that state, including the number of cases, deaths and vaccine condition. There are four different education level attributes in the dataset, including the percentage of people with high school diploma, the percentage of people with bachelor degree, the percentage of people with graduate degree and the percentage of people with no high school diploma.
@@ -33,8 +34,9 @@ The descriptions of the three datasets are provided in the **Data description.pd
 - **US_geographic_dataset**: Provides geographical coordinates for each state in US.
 
 ## Data Collection
-- The dataset is an aggregation of various datasets, providing different perspectives and insights into COVID-19 and education level.
-- It includes symbolic data (city names and states) and numeric data (COVID and education metrics).
+- The dataset is an combination of various datasets, providing insights into COVID-19 and education level accross US.
+- It includes symbolic data (city names and states) and numeric data (COVID and education condition).
+- The data is collected from Kaggle, New York Times, CDC and U. C. Bureau [1-4].
 
 ## Users of This Project
 This interactive App is designed for:
@@ -53,7 +55,7 @@ This interactive App is designed for:
 
 ## Improvement Wishlist
 - Date Expansion: Include data from different years to show how the COVID-19 condition and education level change over time.
-- Additional Metrics: Integrate more factor that may affect the COVID-19 condition and education level, such as the population density, the average income and the average age. So that we can have a more comprehensive understanding of the relationship between COVID-19 and education level.
+- Additional data: Integrate more factor that may affect the COVID-19 condition and education level, such as the population density, the average income and the average age. So that we can have a more comprehensive understanding of the relationship between COVID-19 and education level.
 - User Interface: Add more pages at the dashboard for better visualization.
 - Diagram: Add more interactive diagrams, such as pie chart and histogram, to allow users to explore different facets of the data.
 
@@ -99,8 +101,7 @@ This interactive App is designed for:
 
 
 ## Appendix
-- Time Log Chart:
-![Working time log](https://github.com/SagiriChen2002/CSC-324/blob/main/log/Screenshot%202024-03-08%20at%202.37.50%E2%80%AFPM.png)
+- Time Log Chart: The time log chart is included in the timelog folder.
 
 ### a list of brief descriptions of the 100% requirements
 - [x] Combine various datasets.
