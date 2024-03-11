@@ -83,11 +83,8 @@ This interactive App is designed for:
 - General: The data is encoded using maps.
     * Spatial Position: The primary encoding for the US map. States are positioned based on geographical coordinates.
     * Color: Used to represent data magnitude. For instance, darker shades indicate higher cases, deaths, vaccince distributed or vacccince administered.
-
-
 - Navigate: The Shiny app provides multiple views to allow users to explore different facets of the data.
-    * Users can select different attributes (e.g., cases or deaths) and time periods to view different data on the US map.
-       
+    * Users can select different attributes (e.g., cases or deaths) to view different data on the US map.
 - Interact:
     * Click over states on the map provides detailed data for that state.
 
